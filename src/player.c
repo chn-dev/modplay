@@ -22,6 +22,7 @@ int main(int argc, char * argv[]) {
 
   MODFILE mod;
   SDL_AudioSpec spec;
+  memset( &spec, 0, sizeof( SDL_AudioSpec ) );
   SDL_AudioSpec obtained;
 
   printf("Sigma Player v0.10b (SDL)\n");
@@ -50,13 +51,14 @@ int main(int argc, char * argv[]) {
   }
 
   spec.freq = 44100;
-  spec.format = AUDIO_U16;
+  spec.format = AUDIO_S16;
   spec.channels = 2;
   spec.samples = 4096;
   spec.callback = audio_callback;
   spec.userdata = &mod;
 
-  if (SDL_OpenAudio(&spec, &obtained) < 0) {
+  SDL_AudioDeviceID audioDeviceID = SDL_OpenAudioDevice( NULL, 0, &spec, &obtained, 0 );
+  if (audioDeviceID == 0) {
 
     fprintf(stderr, "Couldn't start audio: %s\n", SDL_GetError());
     MODFILE_Free(&mod);
@@ -71,13 +73,13 @@ int main(int argc, char * argv[]) {
                     obtained.format == AUDIO_S16 || obtained.format == AUDIO_U16 ? 16 : 8,
                     obtained.format == AUDIO_S16 || obtained.format == AUDIO_S8);
 
-  SDL_PauseAudio(0);
+  SDL_PauseAudioDevice(audioDeviceID, 0);
 
   scanf("\n");
 
-  SDL_PauseAudio(1);
+  SDL_PauseAudioDevice(audioDeviceID, 1);
   MODFILE_Stop(&mod);
-  SDL_CloseAudio();
+  SDL_CloseAudioDevice(audioDeviceID);
   MODFILE_Free(&mod);
 
   return 0;
